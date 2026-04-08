@@ -1,0 +1,44 @@
+name: Demo 5 - Cache Dependencies
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  cache-demo:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Cache Dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+    
+    - name: Install Dependencies
+      run: npm install
+    
+    - name: List Installed Packages
+      run: |
+        echo "=========================================="
+        echo "📚 Cache Demo - Dependencies"
+        echo "=========================================="
+        npm list --depth=0
+        echo "=========================================="
+    
+    - name: Verify Cache Hit
+      run: |
+        echo "✅ Cache demo passed!"
+        echo "Note: Second run should be much faster due to cache!"

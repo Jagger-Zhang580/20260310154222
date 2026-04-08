@@ -1,0 +1,96 @@
+name: Demo 6 - Conditional Jobs & Steps
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+jobs:
+  # 条件任务 - 只在特定分支运行
+  code-check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Code Quality Check
+      run: |
+        echo "=========================================="
+        echo "🔍 Code Quality Check"
+        echo "=========================================="
+        echo "Checking code style..."
+        echo "Running linting..."
+        echo "✅ Code check passed!"
+    
+    - name: Security Scan
+      run: |
+        echo "Running security scan..."
+        echo "✅ Security scan passed!"
+
+  # 根据输入条件执行不同任务
+  deploy-staging:
+    if: github.event.inputs.deploy_env == 'staging' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Staging
+      run: |
+        echo "=========================================="
+        echo "🚀 Deploying to STAGING"
+        echo "=========================================="
+        echo "Environment: staging"
+        echo "Build: ${{ github.sha }}"
+        echo "=========================================="
+        echo "Simulating deployment..."
+        sleep 2
+        echo "✅ Staging deployment passed!"
+
+  deploy-production:
+    if: github.event.inputs.deploy_env == 'production'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Production
+      run: |
+        echo "=========================================="
+        echo "🚀 Deploying to PRODUCTION"
+        echo "=========================================="
+        echo "Environment: production"
+        echo "Build: ${{ github.sha }}"
+        echo "=========================================="
+        echo "Simulating deployment..."
+        sleep 2
+        echo "✅ Production deployment passed!"
+
+  # 始终运行的通知任务
+  notify:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Notify Status
+      run: |
+        echo "=========================================="
+        echo "📢 Build Notification"
+        echo "=========================================="
+        echo "Triggered by: ${{ github.actor }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Deploy env: ${{ github.event.inputs.deploy_env || 'not specified' }}"
+        echo "=========================================="
+        echo "✅ Conditional jobs demo passed!"

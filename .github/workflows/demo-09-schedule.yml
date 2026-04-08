@@ -1,0 +1,46 @@
+name: Demo 9 - Schedule & Cron Jobs
+
+on:
+  # 定时触发 - 每天上午9点执行
+  schedule:
+    - cron: '0 1 * * *'  # UTC时间，凌晨1点 = 北京时间上午9点
+  
+  # 手动触发
+  workflow_dispatch:
+
+jobs:
+  scheduled-task:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Scheduled Task
+      run: |
+        echo "=========================================="
+        echo "⏰ Scheduled Task Demo"
+        echo "=========================================="
+        echo "Current time (UTC): $(date -u)"
+        echo "Current time (local): $(date)"
+        echo "Workflow: ${{ github.workflow }}"
+        echo "Run ID: ${{ github.run_id }}"
+        echo "=========================================="
+    
+    - name: Daily Maintenance Tasks
+      run: |
+        echo "🔧 Running daily maintenance..."
+        echo "- Cleaning old logs..."
+        echo "- Checking disk space..."
+        echo "- Verifying backups..."
+        echo "✅ Daily maintenance completed!"
+    
+    - name: Report Status
+      run: |
+        echo "=========================================="
+        echo "📊 Schedule Demo Summary"
+        echo "=========================================="
+        echo "Scheduled time: Daily at 9:00 AM (Beijing)"
+        echo "Last run: $(date)"
+        echo "✅ Scheduled job demo passed!"
+        echo "=========================================="

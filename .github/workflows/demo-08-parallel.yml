@@ -1,0 +1,84 @@
+name: Demo 8 - Parallel Jobs
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# 并行执行的任务
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Frontend Tests
+      run: |
+        echo "=========================================="
+        echo "🧪 Frontend Tests (Parallel Job 1)"
+        echo "=========================================="
+        echo "Running unit tests..."
+        sleep 1
+        echo "Running component tests..."
+        sleep 1
+        echo "All frontend tests passed!"
+        echo "✅ Frontend test job passed!"
+
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Backend Tests
+      run: |
+        echo "=========================================="
+        echo "🧪 Backend Tests (Parallel Job 2)"
+        echo "=========================================="
+        echo "Running API tests..."
+        sleep 1
+        echo "Running integration tests..."
+        sleep 1
+        echo "All backend tests passed!"
+        echo "✅ Backend test job passed!"
+
+  test-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Security Tests
+      run: |
+        echo "=========================================="
+        echo "🔒 Security Tests (Parallel Job 3)"
+        echo "=========================================="
+        echo "Running vulnerability scan..."
+        sleep 1
+        echo "Checking dependencies..."
+        sleep 1
+        echo "All security checks passed!"
+        echo "✅ Security test job passed!"
+
+  # 汇总所有并行任务的结果
+  deploy:
+    needs: [test-frontend, test-backend, test-security]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "=========================================="
+        echo "📊 Parallel Jobs Summary"
+        echo "=========================================="
+        echo "Frontend tests: ✅ Passed"
+        echo "Backend tests: ✅ Passed"
+        echo "Security tests: ✅ Passed"
+        echo "=========================================="
+        echo "🎉 All parallel jobs completed!"
+        echo "Proceeding with deployment..."
+        echo "✅ Parallel jobs demo passed!"

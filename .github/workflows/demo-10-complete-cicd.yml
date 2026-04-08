@@ -1,0 +1,166 @@
+name: Demo 10 - Complete CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# 环境变量
+env:
+  NODE_VERSION: '18'
+  DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+
+jobs:
+  # Stage 1: Code Checkout & Lint
+  lint:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run linter
+      run: |
+        echo "=========================================="
+        echo "🔍 Stage 1: Code Linting"
+        echo "=========================================="
+        echo "Checking code style..."
+        echo "✅ Linting passed!"
+
+  # Stage 2: Run Tests
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run unit tests
+      run: |
+        echo "=========================================="
+        echo "🧪 Stage 2: Unit Tests"
+        echo "=========================================="
+        echo "Running 10 test cases..."
+        echo "✅ All 10 tests passed!"
+    
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests..."
+        echo "✅ Integration tests passed!"
+    
+    - name: Generate test coverage
+      run: |
+        echo "Generating coverage report..."
+        echo "Coverage: 85%"
+        echo "✅ Coverage report generated!"
+
+  # Stage 3: Build
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Build project
+      run: |
+        echo "=========================================="
+        echo "🔨 Stage 3: Build"
+        echo "=========================================="
+        echo "Building project..."
+        mkdir -p dist
+        cp -r index.html deploy-demo.html dist/
+        echo "Build completed!"
+        ls -la dist/
+        echo "✅ Build passed!"
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        path: dist/
+        retention-days: 7
+
+  # Stage 4: Deploy
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-output
+    
+    - name: Deploy to CloudStudio
+      run: |
+        echo "=========================================="
+        echo "🚀 Stage 4: Deploy to CloudStudio"
+        echo "=========================================="
+        echo "Build artifacts downloaded:"
+        ls -la
+        echo "=========================================="
+        echo "Deploy URL: ${{ secrets.DEPLOY_URL }}"
+        echo "✅ Deployment simulation completed!"
+
+  # Stage 5: Final Report
+  report:
+    needs: [lint, test, build, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Generate Report
+      run: |
+        echo "=========================================="
+        echo "📊 Complete CI/CD Pipeline Report"
+        echo "=========================================="
+        echo "Build: #${{ github.run_number }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Triggered by: ${{ github.actor }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "=========================================="
+        echo "Pipeline Stages:"
+        echo "  ✅ Stage 1: Code Linting"
+        echo "  ✅ Stage 2: Unit Tests"
+        echo "  ✅ Stage 3: Build"
+        echo "  ✅ Stage 4: Deploy"
+        echo "=========================================="
+        echo "🎉 Complete CI/CD Pipeline Demo Passed!"
+        echo "=========================================="
