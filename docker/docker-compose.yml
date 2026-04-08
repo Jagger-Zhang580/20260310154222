@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Jenkins 主节点
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./app:/app
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - cicd-network
+    restart: unless-stopped
+
+  # Jenkins Agent (可选，用于分布式构建)
+  jenkins-agent:
+    image: jenkins/inbound-agent:latest
+    container_name: jenkins-agent
+    depends_on:
+      - jenkins
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    networks:
+      - cicd-network
+
+  # 本地 Docker Registry
+  registry:
+    image: registry:2
+    container_name: docker-registry
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - cicd-network
+    restart: unless-stopped
+
+  # Registry Web UI (可选，用于可视化查看镜像)
+  registry-ui:
+    image: joxit/docker-registry-ui:static
+    container_name: registry-ui
+    ports:
+      - "8090:80"
+    environment:
+      - REGISTRY_URL=http://registry:5000
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+    depends_on:
+      - registry
+    networks:
+      - cicd-network
+    restart: unless-stopped
+
+  # Prometheus (可选，用于监控)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - cicd-network
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+  registry_data:
+  prometheus_data:
+
+networks:
+  cicd-network:
+    driver: bridge
