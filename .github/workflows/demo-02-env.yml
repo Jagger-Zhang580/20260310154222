@@ -1,0 +1,38 @@
+name: Demo 2 - Environment Variables
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  env-demo:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set Environment Variables
+      id: vars
+      run: |
+        echo "BUILD_VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
+        echo "BUILD_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        echo "COMMIT_MSG=$(git log -1 --oneline)" >> $GITHUB_ENV
+    
+    - name: Display Environment Variables
+      run: |
+        echo "=========================================="
+        echo "🔧 Environment Variables Demo"
+        echo "=========================================="
+        echo "Build Version: $BUILD_VERSION"
+        echo "Build Date: $BUILD_DATE"
+        echo "Commit Message: $COMMIT_MSG"
+        echo "GitHub Workspace: $GITHUB_WORKSPACE"
+        echo "=========================================="
+    
+    - name: Use Variables in Another Step
+      run: |
+        echo "🚀 Deploying version: $BUILD_VERSION"
+        echo "📅 Date: $BUILD_DATE"
+        echo "✅ Environment variables demo passed!"
