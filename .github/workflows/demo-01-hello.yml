@@ -1,0 +1,28 @@
+name: Demo 1 - Hello World CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Say Hello
+      run: |
+        echo "=========================================="
+        echo "🎉 Hello World! CI/CD Demo 1"
+        echo "=========================================="
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Author: ${{ github.actor }}"
+        echo "Triggered by: ${{ github.event_name }}"
+        echo "=========================================="
+        echo "✅ Hello World CI passed!"
