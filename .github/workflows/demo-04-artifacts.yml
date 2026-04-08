@@ -1,0 +1,67 @@
+name: Demo 4 - Build Artifacts
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Create Build Artifacts
+      run: |
+        # 模拟构建过程
+        mkdir -p dist
+        echo "Build output 1" > dist/output1.txt
+        echo "Build output 2" > dist/output2.txt
+        echo "Build completed at $(date)" > dist/build-info.txt
+        
+        # 创建 zip 包
+        cd dist
+        zip -r ../build.zip *
+        cd ..
+        
+        echo "=========================================="
+        echo "📦 Build Artifacts Demo"
+        echo "=========================================="
+        ls -la dist/
+        echo "=========================================="
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          dist/
+          build.zip
+        retention-days: 7
+    
+    - name: Display Success
+      run: |
+        echo "✅ Artifact upload demo passed!"
+
+  download:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+    
+    - name: Verify Downloaded Files
+      run: |
+        echo "=========================================="
+        echo "📥 Downloaded Artifacts"
+        echo "=========================================="
+        ls -la
+        echo "Content of output1.txt:"
+        cat output1.txt
+        echo "=========================================="
+        echo "✅ Artifact download demo passed!"
