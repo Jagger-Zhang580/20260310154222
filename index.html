@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Talks TMC | 209th Meeting Invitation</title>
+    <style>
+        .nav-bar {
+            background: #2c3e50;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav-btn {
+            background: white;
+            color: #2c3e50;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .nav-btn:hover, .nav-btn.active {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+        .nav-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .header .meeting-number {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 1.4em;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            font-weight: bold;
+        }
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        .info-label {
+            font-weight: bold;
+            min-width: 100px;
+            color: #1e3c72;
+        }
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .role-item {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #1e3c72;
+        }
+        .role-name {
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        .role-person {
+            color: #666;
+            font-size: 0.95em;
+        }
+        .role-item.taken {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+        .role-item.available {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .role-item.available:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .highlights {
+            background: #f0f7ff;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .highlight-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .highlight-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .highlight-title {
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+        .speaker-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .speaker-list li {
+            padding: 5px 0;
+            color: #555;
+        }
+        .note {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .signup-list {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .signup-item {
+            padding: 8px 0;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .signup-item:last-child {
+            border-bottom: none;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1em;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+        }
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .role-grid {
+                grid-template-columns: 1fr;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-btn active">🎯 Meeting Invitation</a>
+        <a href="deploy-demo.html" class="nav-btn">🚀 Deploy Demo</a>
+    </nav>
+    <div class="container">
+        <div class="header">
+            <h1>English Talks TMC</h1>
+            <div class="meeting-number">209th Meeting Invitation</div>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <div class="section-title">🎯 Meeting Theme</div>
+                <p style="font-size: 1.1em; color: #333;">Impact of Iran-Israel Conflict on Foreign Trade and People's Livelihood</p>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📅 Information</div>
+                <div class="info-item">
+                    <span class="info-label">Date:</span>
+                    <span>March 15, 2026</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Time:</span>
+                    <span>3:00 PM - 5:00 PM</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Location:</span>
+                    <span>Youth Center, Foping Third Road, Nanhai District, Foshan</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Meeting Manager:</span>
+                    <span>LUKE</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Fee:</span>
+                    <span>Free for Members & Club Guests | Guests: ¥30</span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">✨ Highlights</div>
+                <div class="highlights">
+                    <div class="highlight-item">
+                        <div class="highlight-title">Part 1: Prepared Speeches</div>
+                        <ul class="speaker-list">
+                            <li>PS1: Luke</li>
+                            <li>PS2: Agustin</li>
+                            <li>Evaluator PS1: TBD</li>
+                            <li>Evaluator PS2: TBD</li>
+                        </ul>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-title">Part 2: Table Topics</div>
+                        <p style="color: #555;">🎭 Secret Theme</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-title">Part 3: Workshop</div>
+                        <p style="color: #555;">Facilitator: Michelle</p>
+                        <p style="color: #555;">Topic: Impact of Iran-Israel Conflict on Foreign Trade and People's Livelihood</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">🎭 Role Sign-up</div>
+                <div class="role-grid" id="roleGrid">
+                    <div class="role-item taken">
+                        <div class="role-name">Meeting Manager</div>
+                        <div class="role-person">Luke</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('SAA', 'this')">
+                        <div class="role-name">SAA (Sergeant at Arms)</div>
+                        <div class="role-person" id="role-SAA">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('TOM', 'this')">
+                        <div class="role-name">TOM (Toastmaster)</div>
+                        <div class="role-person" id="role-TOM">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('Timer', 'this')">
+                        <div class="role-name">Timer</div>
+                        <div class="role-person" id="role-Timer">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('Photographer', 'this')">
+                        <div class="role-name">Photographer</div>
+                        <div class="role-person" id="role-Photographer">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('Warm-up', 'this')">
+                        <div class="role-name">Warm-up Master</div>
+                        <div class="role-person" id="role-Warmup">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('GE', 'this')">
+                        <div class="role-name">GE (General Evaluator)</div>
+                        <div class="role-person" id="role-GE">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('TTM', 'this')">
+                        <div class="role-name">TTM (Table Topics Master)</div>
+                        <div class="role-person" id="role-TTM">TBD</div>
+                    </div>
+                    <div class="role-item available" onclick="selectRole('TTE', 'this')">
+                        <div class="role-name">TTE (Table Topics Evaluator)</div>
+                        <div class="role-person" id="role-TTE">TBD</div>
+                    </div>
+                </div>
+                <div class="note">
+                    💡 Note: Guests are welcome to take roles including SAA, Photographer, Grammarian, Timer, Ah Counter, Warm-up, and Game Master
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">👥 Sign-up List</div>
+                <div class="signup-list" id="signupList">
+                    <div class="signup-item">1. Luke</div>
+                    <div class="signup-item">2. Michelle</div>
+                    <div class="signup-item">3. Agustin</div>
+                    <div class="signup-item">4. </div>
+                    <div class="signup-item">5. </div>
+                    <div class="signup-item">6. </div>
+                    <div class="signup-item">7. </div>
+                    <div class="signup-item">8. </div>
+                    <div class="signup-item">9. </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="generateAgenda()">📋 Generate Agenda</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const roles = {
+            'SAA': 'TBD',
+            'TOM': 'TBD',
+            'Timer': 'TBD',
+            'Photographer': 'TBD',
+            'Warmup': 'TBD',
+            'GE': 'TBD',
+            'TTM': 'TBD',
+            'TTE': 'TBD'
+        };
+        
+        function selectRole(roleName) {
+            const name = prompt(`Enter your name for ${roleName}:`);
+            if (name && name.trim()) {
+                roles[roleName] = name.trim();
+                document.getElementById(`role-${roleName}`).textContent = name.trim();
+                const roleElement = document.getElementById(`role-${roleName}`).parentElement;
+                roleElement.classList.remove('available');
+                roleElement.classList.add('taken');
+            }
+        }
+        
+        function generateAgenda() {
+            const agendaWindow = window.open('', '_blank', 'width=800,height=1000');
+            const agendaContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Talks TMC - Agenda 209th Meeting</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 3px solid #1e3c72; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { color: #1e3c72; }
+        .info-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px; background: #f0f7ff; border-radius: 5px; }
+        .section { margin: 20px 0; padding: 15px; border-left: 4px solid #1e3c72; background: #f8f9fa; }
+        .section-title { font-weight: bold; color: #1e3c72; font-size: 1.2em; margin-bottom: 10px; }
+        .item { padding: 8px 0; border-bottom: 1px solid #ddd; }
+        .item:last-child { border-bottom: none; }
+        .role { font-weight: bold; color: #1e3c72; }
+        .person { color: #333; }
+        .time { color: #666; font-size: 0.9em; width: 100px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>English Talks TMC</h1>
+        <h2>209th Meeting Agenda</h2>
+        <p><strong>Theme:</strong> Impact of Iran-Israel Conflict on Foreign Trade and People's Livelihood</p>
+    </div>
+    
+    <div class="info-row">
+        <span><strong>Date:</strong> March 15, 2026</span>
+        <span><strong>Time:</strong> 3:00 PM - 5:00 PM</span>
+    </div>
+    <div class="info-row">
+        <span><strong>Location:</strong> Youth Center, Foping Third Road, Nanhai District, Foshan</span>
+        <span><strong>MM:</strong> Luke</span>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Opening (3:00 PM - 3:15 PM)</div>
+        <div class="item"><span class="time">3:00</span> <span class="role">SAA:</span> <span class="person">${roles['SAA']}</span> - Opening the meeting</div>
+        <div class="item"><span class="time">3:05</span> <span class="role">TOM:</span> <span class="person">${roles['TOM']}</span> - Introduction & Theme presentation</div>
+        <div class="item"><span class="time">3:10</span> <span class="role">Warm-up:</span> <span class="person">${roles['Warmup']}</span> - Warm-up session</div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Prepared Speeches (3:15 PM - 4:00 PM)</div>
+        <div class="item"><span class="time">3:15</span> <span class="role">PS1:</span> <span class="person">Luke</span> - Prepared Speech</div>
+        <div class="item"><span class="time">3:30</span> <span class="role">PS2:</span> <span class="person">Agustin</span> - Prepared Speech</div>
+        <div class="item"><span class="time">3:45</span> <span class="role">Evaluators:</span> Individual evaluations</div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Table Topics (4:00 PM - 4:30 PM)</div>
+        <div class="item"><span class="time">4:00</span> <span class="role">TTM:</span> <span class="person">${roles['TTM']}</span> - Table Topics Session</div>
+        <div class="item"><span class="time">4:20</span> <span class="role">TTE:</span> <span class="person">${roles['TTE']}</span> - Table Topics Evaluation</div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Workshop (4:30 PM - 4:50 PM)</div>
+        <div class="item"><span class="time">4:30</span> <span class="role">Facilitator:</span> <span class="person">Michelle</span></div>
+        <div class="item"><span class="time"></span> <span class="person">Topic: Impact of Iran-Israel Conflict on Foreign Trade and People's Livelihood</span></div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Evaluation & Closing (4:50 PM - 5:00 PM)</div>
+        <div class="item"><span class="time">4:50</span> <span class="role">GE:</span> <span class="person">${roles['GE']}</span> - General Evaluation</div>
+        <div class="item"><span class="time">4:55</span> <span class="role">Timer:</span> <span class="person">${roles['Timer']}</span> - Timer's Report</div>
+        <div class="item"><span class="time">4:58</span> <span class="role">Photographer:</span> <span class="person">${roles['Photographer']}</span> - Group Photo</div>
+        <div class="item"><span class="time">5:00</span> <span class="role">MM:</span> <span class="person">Luke</span> - Closing Remarks</div>
+    </div>
+    
+    <p style="text-align: center; margin-top: 30px; color: #666;">
+        <strong>English Talks TMC - Where Leaders Are Made!</strong>
+    </p>
+</body>
+</html>`;
+            agendaWindow.document.write(agendaContent);
+            agendaWindow.document.close();
+        }
+    </script>
+</body>
+</html>

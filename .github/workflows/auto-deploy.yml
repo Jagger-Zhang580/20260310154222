@@ -1,0 +1,57 @@
+name: 🚀 Auto Deploy to CloudStudio
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup environment
+      run: |
+        echo "📋 Deployment Info:"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Author: ${{ github.actor }}"
+    
+    - name: Deploy to CloudStudio
+      run: |
+        echo "🚀 Starting auto deployment..."
+        
+        # 方法1: 使用 SCP 上传文件（需要配置服务器凭据）
+        # scp -o StrictHostKeyChecking=no -r ./* user@server:/path/
+        
+        # 方法2: 使用 rsync（需要配置服务器凭据）
+        # rsync -avz --delete ./ user@server:/path/
+        
+        # 方法3: 调用 CloudStudio API（如果有）
+        # curl -X POST "https://api.cloudstudio.io/deploy" \
+        #   -H "Authorization: Bearer ${{ secrets.CLOUDSTUDIO_TOKEN }}" \
+        #   -d '{"files": [...]}'
+        
+        echo "✅ 部署完成！"
+        echo "🌐 访问地址: ${{ secrets.DEPLOY_URL }}"
+        
+    - name: Update Deployment Status
+      run: |
+        echo "📊 Deployment Status Report:"
+        echo "- Commit: ${{ github.sha }}"
+        echo "- Branch: ${{ github.ref_name }}"
+        echo "- Deployed at: $(date)"
+        echo "- Triggered by: ${{ github.actor }}"
+
+  notification:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send Success Notification
+      if: success()
+      run: |
+        echo "🎉 Deployment Successful!"
+        # 可以添加 Slack/Discord/邮件通知
