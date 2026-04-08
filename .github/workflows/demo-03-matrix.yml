@@ -1,0 +1,56 @@
+name: Demo 3 - Matrix Build Strategy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # 使用 Matrix 策略并行测试多个环境
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+        os: [ubuntu-latest]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Display Build Info
+      run: |
+        echo "=========================================="
+        echo "🔨 Matrix Build Demo - Build #${{ github.run_number }}"
+        echo "=========================================="
+        echo "Node Version: ${{ matrix.node-version }}"
+        echo "OS: ${{ matrix.os }}"
+        echo "Job ID: ${{ matrix.job }}"
+        echo "=========================================="
+        echo "✅ Build for Node ${{ matrix.node-version }} passed!"
+
+  # 汇总所有 Matrix 构建结果
+  summary:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Summary
+      run: |
+        echo "=========================================="
+        echo "📊 Matrix Build Summary"
+        echo "=========================================="
+        echo "Total builds: ${{ needs.build.outputs.total }}"
+        echo "All builds completed successfully!"
+        echo "✅ Matrix strategy demo passed!"
