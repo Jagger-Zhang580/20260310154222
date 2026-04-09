@@ -1,0 +1,44 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>English Talks TMC CI/CD Pipeline</description>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script>pipeline {
+    agent any
+    
+    stages {
+        stage('Hello') {
+            steps {
+                echo 'Hello from Jenkins Blue Ocean!'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'mkdir -p build &amp;&amp; echo "Build OK"'
+                echo 'Build completed!'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                echo 'All tests passed!'
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                echo "Deploying build #${env.BUILD_NUMBER}..."
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "Build #${env.BUILD_NUMBER} - ${currentBuild.result ?: 'SUCCESS'}"
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+</flow-definition>

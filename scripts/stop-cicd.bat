@@ -1,13 +1,13 @@
 @echo off
 REM ============================================
-REM  停止 CI/CD 环境脚本 (Windows)
+REM  停止 CI/CD + n8n 环境 (Windows)
 REM ============================================
 
 cd /d "%~dp0docker"
 
-echo 停止 CI/CD 服务...
+echo 停止 CI/CD + n8n 服务...
 docker-compose down
 
 echo.
-echo 所有服务已停止!
+echo 所有服务已停止! (Jenkins + Registry + n8n)
 pause

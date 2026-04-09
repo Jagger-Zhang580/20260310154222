@@ -1,12 +1,12 @@
 #!/bin/bash
 # ============================================
-#  本地 CI/CD 环境启动脚本 (Linux/Mac)
+#  本地 CI/CD + n8n 自动化环境启动脚本 (Linux/Mac)
 # ============================================
 
 set -e
 
 echo "==========================================="
-echo "  本地 CI/CD 环境启动脚本"
+echo "  本地 CI/CD + n8n 自动化环境启动脚本"
 echo "==========================================="
 
 # 检查 Docker 是否安装
@@ -32,7 +32,7 @@ cd "$(dirname "$0")/docker"
 
 # 启动服务
 echo ""
-echo "[3/4] 启动 Docker 服务..."
+echo "[3/4] 启动 Docker 服务 (Jenkins + Registry + n8n)..."
 docker-compose up -d
 
 # 等待服务启动
@@ -54,11 +54,13 @@ echo "  启动完成!"
 echo "==========================================="
 echo ""
 echo "  Jenkins:       http://localhost:8080"
-echo "  Registry UI:   http://localhost:8090"
+echo "  Blue Ocean:    http://localhost:8080/blue"
 echo "  Registry API:  http://localhost:5000"
+echo "  n8n 自动化:    http://localhost:5678"
+echo "    (用户名: admin / 密码: admin123)"
 echo ""
 echo "  获取 Jenkins 密码:"
-echo "  docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword"
+echo "  docker exec jenkins-blueocean cat /var/jenkins_home/secrets/initialAdminPassword"
 echo ""
 
 # 打开浏览器 (Linux)

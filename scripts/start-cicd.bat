@@ -1,10 +1,10 @@
 @echo off
 REM ============================================
-REM  启动 Jenkins Blue Ocean CI/CD 环境
+REM  启动本地 CI/CD + n8n 自动化环境
 REM ============================================
 
 echo ===========================================
-echo   启动 Jenkins Blue Ocean CI/CD 环境
+echo   启动本地 CI/CD + n8n 自动化环境
 echo ===========================================
 
 REM 检查 Docker 是否安装
@@ -22,12 +22,12 @@ cd /d "%~dp0docker"
 
 REM 启动服务
 echo.
-echo [2/3] 启动 Jenkins Blue Ocean + Registry...
+echo [2/3] 启动 Jenkins + Registry + n8n...
 docker compose up -d
 
 REM 等待服务启动
 echo.
-echo [3/3] 等待 Jenkins 启动 (约30秒)...
+echo [3/3] 等待服务启动 (约30秒)...
 timeout /t 30 /nobreak >nul
 
 REM 检查服务状态
@@ -42,6 +42,8 @@ echo.
 echo   Jenkins Classic UI: http://localhost:8080
 echo   Jenkins Blue Ocean: http://localhost:8080/blue
 echo   Registry API:       http://localhost:5000/v2/_catalog
+echo   n8n 自动化平台:     http://localhost:5678
+echo     (用户名: admin / 密码: admin123)
 echo.
 echo   获取 Jenkins 密码:
 echo   docker exec jenkins-blueocean cat /var/jenkins_home/secrets/initialAdminPassword

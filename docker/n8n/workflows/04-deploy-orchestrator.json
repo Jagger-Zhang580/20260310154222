@@ -1,0 +1,163 @@
+{
+  "name": "多环境部署编排",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deploy",
+        "responseMode": "lastNode"
+      },
+      "id": "deploy-webhook",
+      "name": "部署触发器",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://jenkins:8080/job/english-talks-tmc/build",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Jenkins-Crumb",
+              "value": "={{ $node['获取 Crumb'].json.crumb }}"
+            }
+          ]
+        }
+      },
+      "id": "jenkins-build",
+      "name": "Jenkins 构建",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [470, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Jenkins Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "wait-build",
+      "name": "等待构建",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [690, 300],
+      "notes": "等待 Jenkins 构建完成"
+    },
+    {
+      "parameters": {
+        "url": "=http://jenkins:8080/job/english-talks-tmc/lastBuild/api/json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth"
+      },
+      "id": "check-result",
+      "name": "检查构建结果",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [910, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Jenkins Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.result }}",
+              "operation": "equals",
+              "value2": "SUCCESS"
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "构建成功?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/v2/_catalog",
+        "options": {}
+      },
+      "id": "push-registry",
+      "name": "推送镜像到 Registry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1350, 180],
+      "notes": "构建成功后推送 Docker 镜像到本地 Registry"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🚀 部署成功!\n\n构建号: #{{ $node['检查构建结果'].json.number }}\n镜像已推送到 Registry\n\n🔗 http://localhost:5000/v2/_catalog"
+      },
+      "id": "deploy-success",
+      "name": "部署成功通知",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1570, 180],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=❌ 部署失败!\n\n构建号: #{{ $node['检查构建结果'].json.number }}\n状态: {{ $node['检查构建结果'].json.result }}\n\n⚠️ 需要人工介入!"
+      },
+      "id": "deploy-fail",
+      "name": "部署失败通知",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1350, 420],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    }
+  ],
+  "connections": {
+    "部署触发器": {
+      "main": [
+        [{ "node": "Jenkins 构建", "type": "main", "index": 0 }]
+      ]
+    },
+    "Jenkins 构建": {
+      "main": [
+        [{ "node": "等待构建", "type": "main", "index": 0 }]
+      ]
+    },
+    "等待构建": {
+      "main": [
+        [{ "node": "检查构建结果", "type": "main", "index": 0 }]
+      ]
+    },
+    "检查构建结果": {
+      "main": [
+        [{ "node": "构建成功?", "type": "main", "index": 0 }]
+      ]
+    },
+    "构建成功?": {
+      "main": [
+        [{ "node": "推送镜像到 Registry", "type": "main", "index": 0 }],
+        [{ "node": "部署失败通知", "type": "main", "index": 0 }]
+      ]
+    },
+    "推送镜像到 Registry": {
+      "main": [
+        [{ "node": "部署成功通知", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

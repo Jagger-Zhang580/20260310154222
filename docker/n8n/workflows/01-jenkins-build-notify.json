@@ -1,0 +1,95 @@
+{
+  "name": "Jenkins Build 通知",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jenkins-notify",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Jenkins Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.build.phase }}",
+              "operation": "equals",
+              "value2": "COMPLETED"
+            }
+          ]
+        }
+      },
+      "id": "check-completed",
+      "name": "构建是否完成",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.build.status }}",
+              "operation": "equals",
+              "value2": "SUCCESS"
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "构建是否成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [690, 200]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=✅ Jenkins 构建成功!\n\n项目: {{ $json.body.name }}\n构建号: #{{ $json.body.build.number }}\n状态: {{ $json.body.build.status }}\n时长: {{ $json.body.build.duration }}ms\n\n🔗 查看详情: http://localhost:8080/job/{{ $json.body.name }}/{{ $json.body.build.number }}/"
+      },
+      "id": "success-notify",
+      "name": "发送成功通知",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [910, 120],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=❌ Jenkins 构建失败!\n\n项目: {{ $json.body.name }}\n构建号: #{{ $json.body.build.number }}\n状态: {{ $json.body.build.status }}\n\n🔗 查看详情: http://localhost:8080/job/{{ $json.body.name }}/{{ $json.body.build.number }}/\n\n⚠️ 请尽快检查!"
+      },
+      "id": "failure-notify",
+      "name": "发送失败通知",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [910, 320],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    }
+  ],
+  "connections": {
+    "Jenkins Webhook": {
+      "main": [
+        [{ "node": "构建是否完成", "type": "main", "index": 0 }]
+      ]
+    },
+    "构建是否完成": {
+      "main": [
+        [{ "node": "构建是否成功", "type": "main", "index": 0 }]
+      ]
+    },
+    "构建是否成功": {
+      "main": [
+        [{ "node": "发送成功通知", "type": "main", "index": 0 }],
+        [{ "node": "发送失败通知", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

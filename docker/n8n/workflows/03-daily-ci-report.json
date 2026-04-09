@@ -1,0 +1,91 @@
+{
+  "name": "每日 CI/CD 日报",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "工作日早9点触发",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "周一到周五早9点自动运行"
+    },
+    {
+      "parameters": {
+        "url": "=http://jenkins:8080/api/json?tree=jobs[name,color,lastBuild[number,duration,result,timestamp]]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth"
+      },
+      "id": "get-jenkins-status",
+      "name": "获取 Jenkins 构建状态",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [470, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Jenkins Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/JaggerZhang/english-talks-tmc/actions/runs?per_page=5",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "get-github-actions",
+      "name": "获取 GitHub Actions 状态",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [470, 500],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=📊 CI/CD 日报 - {{ $now.format('yyyy-MM-dd') }}\n\n🔵 Jenkins:\n{{ $node['获取 Jenkins 构建状态'].json.jobs.map(j => '  ' + (j.color === 'blue' ? '✅' : '❌') + ' ' + j.name + ' #' + j.lastBuild.number + ' ' + (j.lastBuild.result || 'RUNNING')).join('\\n') }}\n\n🟣 GitHub Actions:\n  最近 5 次运行请查看 GitHub\n\n🔗 Jenkins: http://localhost:8080\n🔗 GitHub: https://github.com/JaggerZhang/english-talks-tmc/actions"
+      },
+      "id": "send-report",
+      "name": "发送日报",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [690, 400],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    }
+  ],
+  "connections": {
+    "工作日早9点触发": {
+      "main": [
+        [
+          { "node": "获取 Jenkins 构建状态", "type": "main", "index": 0 },
+          { "node": "获取 GitHub Actions 状态", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "获取 Jenkins 构建状态": {
+      "main": [
+        [{ "node": "发送日报", "type": "main", "index": 0 }]
+      ]
+    },
+    "获取 GitHub Actions 状态": {
+      "main": [
+        [{ "node": "发送日报", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

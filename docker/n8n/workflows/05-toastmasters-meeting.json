@@ -1,0 +1,101 @@
+{
+  "name": "Toastmasters 会议自动化",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * 2"
+            }
+          ]
+        }
+      },
+      "id": "meeting-trigger",
+      "name": "每周二早10点触发",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "会议前一天自动提醒"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/JaggerZhang/english-talks-tmc/contents/index.html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "fetch-meeting-page",
+      "name": "获取会议页面",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [470, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "GitHub Token"
+        }
+      },
+      "notes": "从 GitHub 获取最新的会议页面内容"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🎤 English Talks TMC 会议提醒!\n\n📅 明天是我们的例会日!\n\n📝 请确认你的角色:\n- Toastmaster of the Day\n- Table Topics Master\n- Prepared Speakers\n- Evaluators\n- Timer / Ah-counter / Grammarian\n\n🔗 报名链接: https://jaggerzhang.github.io/english-talks-tmc/\n\n期待你的参与! 💪"
+      },
+      "id": "meeting-reminder",
+      "name": "发送会议提醒",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [690, 300],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 18 * * 3"
+            }
+          ]
+        }
+      },
+      "id": "agenda-trigger",
+      "name": "会议日18:30触发",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "notes": "会议当天傍晚自动生成议程"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=📋 English Talks TMC Agenda 已生成!\n\n会议即将开始，议程已自动生成。\n\n🔗 查看议程: https://jaggerzhang.github.io/english-talks-tmc/\n\n点击页面上的「Generate Agenda」按钮查看完整议程。\n\nSee you tonight! 🎤"
+      },
+      "id": "agenda-notify",
+      "name": "发送议程通知",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [470, 500],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    }
+  ],
+  "connections": {
+    "每周二早10点触发": {
+      "main": [
+        [{ "node": "获取会议页面", "type": "main", "index": 0 }]
+      ]
+    },
+    "获取会议页面": {
+      "main": [
+        [{ "node": "发送会议提醒", "type": "main", "index": 0 }]
+      ]
+    },
+    "会议日18:30触发": {
+      "main": [
+        [{ "node": "发送议程通知", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

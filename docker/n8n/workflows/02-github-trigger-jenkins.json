@@ -1,0 +1,117 @@
+{
+  "name": "GitHub Push 触发 Jenkins 构建",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-push",
+        "responseMode": "lastNode"
+      },
+      "id": "github-webhook",
+      "name": "GitHub Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.ref }}",
+              "operation": "contains",
+              "value2": "main"
+            }
+          ]
+        }
+      },
+      "id": "check-main-branch",
+      "name": "是否 main 分支",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://jenkins:8080/crumbIssuer/api/json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth"
+      },
+      "id": "get-crumb",
+      "name": "获取 Jenkins Crumb",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [690, 200],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Jenkins Auth"
+        }
+      },
+      "notes": "解决 CSRF 保护问题！n8n 正确处理 crumb 认证"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://jenkins:8080/job/english-talks-tmc/build",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Jenkins-Crumb",
+              "value": "={{ $json.crumb }}"
+            }
+          ]
+        }
+      },
+      "id": "trigger-build",
+      "name": "触发 Jenkins 构建",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [910, 200],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Jenkins Auth"
+        }
+      },
+      "notes": "用 crumb header 绕过 CSRF 限制"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🚀 触发 Jenkins 构建!\n\n触发者: {{ $node['GitHub Webhook'].json.body.pusher.name }}\n分支: {{ $node['GitHub Webhook'].json.body.ref }}\n提交: {{ $node['GitHub Webhook'].json.body.head_commit.message }}\n\nJenkins 正在构建..."
+      },
+      "id": "notify-triggered",
+      "name": "发送触发通知",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1130, 200],
+      "notes": "可替换为飞书/企业微信/Slack/邮件节点"
+    }
+  ],
+  "connections": {
+    "GitHub Webhook": {
+      "main": [
+        [{ "node": "是否 main 分支", "type": "main", "index": 0 }]
+      ]
+    },
+    "是否 main 分支": {
+      "main": [
+        [{ "node": "获取 Jenkins Crumb", "type": "main", "index": 0 }]
+      ]
+    },
+    "获取 Jenkins Crumb": {
+      "main": [
+        [{ "node": "触发 Jenkins 构建", "type": "main", "index": 0 }]
+      ]
+    },
+    "触发 Jenkins 构建": {
+      "main": [
+        [{ "node": "发送触发通知", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}
