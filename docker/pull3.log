@@ -1,0 +1,40 @@
+2.452.3-lts: Pulling from jenkins/jenkins
+d4c632816288: Pulling fs layer
+86a41c428de5: Pulling fs layer
+e9aef93137af: Pulling fs layer
+995009f196ec: Pulling fs layer
+aa636159e94b: Pulling fs layer
+25f6587a42fb: Pulling fs layer
+6778d605d2d1: Pulling fs layer
+f0f251032519: Pulling fs layer
+07b0d8ca8ab7: Pulling fs layer
+941a647ff357: Pulling fs layer
+862717e1a01c: Pulling fs layer
+a559a5c3d549: Pulling fs layer
+86a41c428de5: Download complete
+862717e1a01c: Download complete
+6778d605d2d1: Download complete
+d4c632816288: Download complete
+07b0d8ca8ab7: Download complete
+25f6587a42fb: Download complete
+a559a5c3d549: Download complete
+f0f251032519: Download complete
+e9aef93137af: Download complete
+941a647ff357: Download complete
+aa636159e94b: Download complete
+995009f196ec: Download complete
+e9aef93137af: Pull complete
+941a647ff357: Pull complete
+f0f251032519: Pull complete
+d4c632816288: Pull complete
+07b0d8ca8ab7: Pull complete
+995009f196ec: Pull complete
+25f6587a42fb: Pull complete
+a559a5c3d549: Pull complete
+aa636159e94b: Pull complete
+862717e1a01c: Pull complete
+6778d605d2d1: Pull complete
+86a41c428de5: Pull complete
+Digest: sha256:50b22a852fa690a195453231f649ee171ee6b15a57c3b49bab4130dd97612c34
+Status: Downloaded newer image for jenkins/jenkins:2.452.3-lts
+docker.io/jenkins/jenkins:2.452.3-lts

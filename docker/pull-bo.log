@@ -1,0 +1,47 @@
+Using default tag: latest
+latest: Pulling from jenkinsci/blueocean
+28ea9c56d127: Pulling fs layer
+f65ed3fbea93: Pulling fs layer
+9fb6b045bfc8: Pulling fs layer
+b3b3ea5ca7f4: Pulling fs layer
+e5ecc395b9e7: Pulling fs layer
+f786c314ed83: Pulling fs layer
+213ec9aee27d: Pulling fs layer
+0061c72f26bd: Pulling fs layer
+a4cea1bad4ff: Pulling fs layer
+1a7d7223e42d: Pulling fs layer
+8f2b061b68da: Pulling fs layer
+d2d0e6e9298c: Pulling fs layer
+bba48a821480: Pulling fs layer
+3509f53c6b7b: Pulling fs layer
+28ea9c56d127: Download complete
+b3b3ea5ca7f4: Download complete
+0061c72f26bd: Download complete
+a4cea1bad4ff: Download complete
+1a7d7223e42d: Download complete
+8f2b061b68da: Download complete
+e5ecc395b9e7: Download complete
+213ec9aee27d: Download complete
+213ec9aee27d: Pull complete
+f65ed3fbea93: Download complete
+9fb6b045bfc8: Download complete
+9fb6b045bfc8: Pull complete
+1a7d7223e42d: Pull complete
+3509f53c6b7b: Download complete
+8f2b061b68da: Pull complete
+d2d0e6e9298c: Download complete
+bba48a821480: Download complete
+f786c314ed83: Download complete
+bba48a821480: Pull complete
+0061c72f26bd: Pull complete
+f65ed3fbea93: Pull complete
+3509f53c6b7b: Pull complete
+28ea9c56d127: Pull complete
+b3b3ea5ca7f4: Pull complete
+e5ecc395b9e7: Pull complete
+a4cea1bad4ff: Pull complete
+d2d0e6e9298c: Pull complete
+f786c314ed83: Pull complete
+Digest: sha256:f27933313986f7fb0b5784aa6520ebddc455ce258cbf4d13a3e3cf9d4c94d992
+Status: Downloaded newer image for jenkinsci/blueocean:latest
+docker.io/jenkinsci/blueocean:latest

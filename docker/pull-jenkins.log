@@ -1,0 +1,20 @@
+lts: Pulling from jenkins/jenkins
+53c88f1dfeb7: Pulling fs layer
+fbae626c1b7a: Pulling fs layer
+4d2125ccf71c: Pulling fs layer
+6da7907f70f4: Pulling fs layer
+69503609dc01: Pulling fs layer
+e682a95ad036: Pulling fs layer
+6327a7366a6f: Pulling fs layer
+b19825c62ed8: Pulling fs layer
+b7b154fd69a1: Pulling fs layer
+01938f7c040b: Pulling fs layer
+ec7478903548: Pulling fs layer
+876217fdee20: Pulling fs layer
+e682a95ad036: Already exists
+6da7907f70f4: Already exists
+69503609dc01: Download complete
+b19825c62ed8: Already exists
+ec7478903548: Already exists
+01938f7c040b: Already exists
+6327a7366a6f: Already exists

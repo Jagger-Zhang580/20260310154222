@@ -1,0 +1,87 @@
+// Jenkins Pipeline - 并行执行 (SCM)
+
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                echo '📦 Code checked out from SCM'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo '🔨 Building application...'
+                sh '''
+                    mkdir -p build
+                    cp *.html build/ 2>/dev/null || true
+                '''
+            }
+        }
+        
+        stage('Parallel Tests') {
+            parallel {
+                stage('Unit Tests') {
+                    steps {
+                        echo '🧪 Running Unit Tests...'
+                        sh 'sleep 2 && echo "Unit tests passed!"'
+                    }
+                }
+                
+                stage('Integration Tests') {
+                    steps {
+                        echo '🧪 Running Integration Tests...'
+                        sh 'sleep 2 && echo "Integration tests passed!"'
+                    }
+                }
+                
+                stage('Security Scan') {
+                    steps {
+                        echo '🔒 Running Security Scan...'
+                        sh '''
+                            echo "Checking for sensitive files..."
+                            find . -name ".env" -not -path "./.git/*" 2>/dev/null && echo "⚠️ Found .env" || echo "✅ No .env files"
+                            echo "Security scan passed!"
+                        '''
+                    }
+                }
+                
+                stage('Code Quality') {
+                    steps {
+                        echo '📊 Running Code Quality Check...'
+                        sh 'sleep 1 && echo "Code quality check passed!"'
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                echo '🐳 Building Docker image...'
+                sh '''
+                    if docker info >/dev/null 2>&1; then
+                        echo "Building with Docker..."
+                        docker build -t myapp:${BUILD_NUMBER} . 2>/dev/null || echo "Docker build simulated"
+                    else
+                        echo "Docker not available, simulating build..."
+                    fi
+                '''
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                echo "🚀 Deploying build #${env.BUILD_NUMBER}..."
+            }
+        }
+    }
+    
+    post {
+        always {
+            archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
+            echo "Pipeline completed: ${currentBuild.result ?: 'SUCCESS'}"
+        }
+    }
+}

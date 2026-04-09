@@ -1,0 +1,53 @@
+// Jenkins Pipeline - 简化版 (SCM)
+// 适合初学者，直接从 SCM 拉取代码
+
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                // 从 SCM 拉取代码（在 Jenkins Job 中配置 Git 仓库）
+                checkout scm
+                
+                echo '=========================================='
+                echo '📦 Code Checked Out'
+                echo '=========================================='
+                sh 'git log -1 --oneline'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo '🔨 Building...'
+                sh '''
+                    mkdir -p build
+                    cp *.html build/ 2>/dev/null || true
+                    echo "Build #${BUILD_NUMBER}" > build/info.txt
+                '''
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo '🧪 Testing...'
+                sh '''
+                    echo "Checking HTML files..."
+                    ls build/*.html 2>/dev/null || echo "No HTML files"
+                '''
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                echo "🚀 Deploying build #${env.BUILD_NUMBER}..."
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "Build #${env.BUILD_NUMBER} completed with status: ${currentBuild.result ?: 'SUCCESS'}"
+        }
+    }
+}
