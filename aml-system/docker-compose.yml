@@ -1,0 +1,209 @@
+services:
+  # ========================
+  # 数据存储层
+  # ========================
+  
+  # PostgreSQL - 交易数据存储
+  postgres:
+    image: postgres:15
+    container_name: aml-postgres
+    environment:
+      POSTGRES_DB: aml_db
+      POSTGRES_USER: aml_user
+      POSTGRES_PASSWORD: aml_pass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aml_user -d aml_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Neo4j - 图数据库（关系网络分析）
+  neo4j:
+    image: neo4j:5
+    container_name: aml-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/aml_neo4j123
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_server_memory_pagecache_size: 256M
+      NEO4J_server_memory_heap_initial__size: 512M
+      NEO4J_server_memory_heap_max__size: 512M
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p aml_neo4j123 'RETURN 1'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # Redis - 实时规则引擎缓存
+  redis:
+    image: redis:7-alpine
+    container_name: aml-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO - 对象存储（模拟 OSS/DataWorks 数据湖）
+  minio:
+    image: minio/minio:latest
+    container_name: aml-minio
+    environment:
+      MINIO_ROOT_USER: aml_admin
+      MINIO_ROOT_PASSWORD: aml_minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  # ========================
+  # 计算引擎层
+  # ========================
+  
+  # Spark Master
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: aml-spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8081:8080"
+      - "7077:7077"
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./spark/data:/opt/spark/data
+    restart: unless-stopped
+
+  # Spark Worker
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: aml-spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./spark/data:/opt/spark/data
+    restart: unless-stopped
+
+  # ========================
+  # 学习与分析层
+  # ========================
+  
+  # Jupyter Notebook - 交互式学习
+  jupyter:
+    image: jupyter/pyspark-notebook:latest
+    container_name: aml-jupyter
+    environment:
+      JUPYTER_TOKEN: aml_learning
+      SPARK_MASTER: spark://spark-master:7077
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./spark/data:/home/jovyan/data
+    depends_on:
+      - spark-master
+      - postgres
+      - neo4j
+      - redis
+    restart: unless-stopped
+
+  # ========================
+  # DataWorks 模拟层
+  # ========================
+  
+  # DataWorks Simulator - 模拟数据集成调度
+  dataworks-sim:
+    build:
+      context: ./dataworks
+      dockerfile: Dockerfile
+    container_name: aml-dataworks
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: aml_db
+      POSTGRES_USER: aml_user
+      POSTGRES_PASSWORD: aml_pass123
+      MINIO_HOST: minio
+      MINIO_PORT: 9000
+      MINIO_USER: aml_admin
+      MINIO_PASSWORD: aml_minio123
+      SPARK_MASTER: spark://spark-master:7077
+      SCHEDULE_INTERVAL: 60
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./dataworks:/app
+      - ./spark/data:/data
+    restart: unless-stopped
+
+  # ========================
+  # 可视化层
+  # ========================
+  
+  # Grafana - 监控和可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aml-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: aml_grafana123
+      GF_INSTALL_PLUGINS: neo4j-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  redis_data:
+  minio_data:
+  grafana_data:
