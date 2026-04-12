@@ -1,0 +1,207 @@
+# ============================================================
+#  Airbyte 连接配置 - 声明式数据同步
+#  
+#  Airbyte 是另一种数据集成方案，与 Debezium 互补:
+#  Debezium: 实时 CDC (低延迟, 增量优先)
+#  Airbyte:  批量同步 (全量/增量, ELT 模式, 连接器丰富)
+#  
+#  适合场景: 
+#  - 定时全量/增量同步 (非实时)
+#  - 数据迁移 (数据库间搬数据)
+#  - SaaS 数据源同步 (Shopify, Salesforce, Stripe...)
+# ============================================================
+
+# ============ 应用1: 电商系统 → ClickHouse ============
+- connection_id: conn-ecom-to-clickhouse
+  name: "电商数据 → ClickHouse 分析"
+  
+  source:
+    type: mysql
+    config:
+      host: mysql-ecom
+      port: 3306
+      username: cdc_user
+      password: cdc_pass123
+      database: ecommerce
+      replication_method:
+        method: standard  # standard=全量 | CDC=增量(Binlog)
+      # 增量同步字段
+      cursor_field: updated_at
+      # 全量同步的表
+      streams:
+        - name: users
+          sync_mode: full_refresh  # 全量覆盖
+          destination_sync_mode: overwrite
+        - name: products
+          sync_mode: full_refresh
+          destination_sync_mode: overwrite
+        - name: orders
+          sync_mode: incremental_deduped_history  # 增量追加+去重
+          cursor_field: updated_at
+          destination_sync_mode: append_dedup
+        - name: order_items
+          sync_mode: incremental_append  # 增量追加
+          cursor_field: order_id
+          destination_sync_mode: append
+
+  destination:
+    type: clickhouse
+    config:
+      host: clickhouse
+      port: 9000
+      database: analytics
+      username: default
+      password: ch_pass123
+
+  schedule:
+    cron: "0 */2 * * *"  # 每2小时同步一次
+
+# ============ 应用2: ERP系统 → Doris 实时数仓 ============
+- connection_id: conn-erp-to-doris
+  name: "ERP数据 → Doris 实时数仓"
+  
+  source:
+    type: postgres
+    config:
+      host: postgres-erp
+      port: 5432
+      username: cdc_user
+      password: cdc_pass123
+      database: erp_system
+      replication_method:
+        method: logical_replication  # PostgreSQL 逻辑复制
+        replication_slot: airbyte_erp
+      streams:
+        - name: suppliers
+          sync_mode: full_refresh
+          destination_sync_mode: overwrite
+        - name: purchase_orders
+          sync_mode: incremental_deduped_history
+          cursor_field: updated_at
+          destination_sync_mode: append_dedup
+        - name: inventory
+          sync_mode: incremental_deduped_history
+          cursor_field: updated_at
+          destination_sync_mode: append_dedup
+        - name: vouchers
+          sync_mode: incremental_deduped_history
+          cursor_field: updated_at
+          destination_sync_mode: append_dedup
+
+  destination:
+    type: doris
+    config:
+      fe_url: http://doris-fe:8030
+      jdbc_url: jdbc:mysql://doris-fe:9030
+      username: root
+      database: realtime_dw
+
+  schedule:
+    cron: "0 */1 * * *"  # 每小时同步
+
+# ============ 应用3: CRM系统 → Elasticsearch 搜索 ============
+- connection_id: conn-crm-to-es
+  name: "CRM数据 → Elasticsearch 全文搜索"
+  
+  source:
+    type: mssql  # SQL Server
+    config:
+      host: sqlserver-crm
+      port: 1433
+      username: sa
+      password: "CDC_pass123!"
+      database: crm_system
+      replication_method:
+        method: standard
+      streams:
+        - name: customers
+          sync_mode: full_refresh
+          destination_sync_mode: overwrite
+        - name: interactions
+          sync_mode: incremental_append
+          cursor_field: created_at
+          destination_sync_mode: append
+
+  destination:
+    type: elasticsearch
+    config:
+      endpoint: http://elasticsearch:9200
+
+  schedule:
+    cron: "30 */2 * * *"  # 每2小时半点同步
+
+# ============ 应用4: MongoDB日志 → S3数据湖 ============
+- connection_id: conn-logs-to-s3
+  name: "应用日志 → S3 数据湖归档"
+  
+  source:
+    type: mongodb
+    config:
+      host: mongo-logs
+      port: 27017
+      username: cdc_user
+      password: cdc_pass123
+      auth_source: admin
+      database: app_logs
+      streams:
+        - name: access_logs
+          sync_mode: incremental_append
+          cursor_field: timestamp
+          destination_sync_mode: append
+        - name: error_logs
+          sync_mode: incremental_append
+          cursor_field: timestamp
+          destination_sync_mode: append
+        - name: audit_logs
+          sync_mode: incremental_append
+          cursor_field: timestamp
+          destination_sync_mode: append
+
+  destination:
+    type: s3
+    config:
+      bucket: cdc-datalake
+      endpoint: http://minio:9000
+      access_key_id: cdc_admin
+      secret_access_key: cdc_minio123
+      path_style: true
+      format: parquet
+      partition_by: ["_ab_stream", "year", "month", "day"]
+
+  schedule:
+    cron: "0 2 * * *"  # 每天凌晨2点归档
+
+# ============ 应用5: Oracle财务 → 全量+增量 PostgreSQL ============
+- connection_id: conn-finance-to-pg
+  name: "Oracle财务 → PostgreSQL 备份"
+  
+  source:
+    type: oracle
+    config:
+      host: oracle-finance
+      port: 1521
+      username: cdc_user
+      password: cdc_pass123
+      service_name: XEPDB1
+      replication_method:
+        method: standard
+      streams:
+        - name: transactions
+          sync_mode: incremental_deduped_history
+          cursor_field: updated_at
+          destination_sync_mode: append_dedup
+        - name: accounts
+          sync_mode: full_refresh
+          destination_sync_mode: overwrite
+
+  destination:
+    type: postgres
+    config:
+      host: postgres-erp
+      port: 5432
+      username: cdc_user
+      password: cdc_pass123
+      database: finance_backup
+
+  schedule:
+    cron: "0 */4 * * *"  # 每4小时同步
