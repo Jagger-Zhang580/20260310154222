@@ -1,0 +1,57 @@
+{
+  "name": "mysql-ecom-source",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "database.hostname": "mysql-ecom",
+    "database.port": "3306",
+    "database.user": "cdc_user",
+    "database.password": "cdc_pass123",
+    "database.server.id": "184054",
+    "database.server.name": "ecom_mysql",
+    "database.include.list": "ecommerce",
+    "table.include.list": "ecommerce.users,ecommerce.products,ecommerce.orders,ecommerce.order_items",
+    
+    "_comment_snapshot": "===== 全量+增量 模式配置 =====",
+    "snapshot.mode": "initial",
+    "_comment_snapshot_modes": "initial=全量+增量(默认) | schema_only=仅增量 | never=从不全量 | when_needed=需要时全量",
+    
+    "_comment_binlog": "===== Binlog 配置 =====",
+    "binlog.mode": "ROW",
+    "binlog.row.image": "FULL",
+    "gtid.source.inclusion.list": "",
+    
+    "_comment_topic": "===== Topic 命名规则 =====",
+    "topic.prefix": "ecom",
+    "topic.creation.default.replication.factor": "1",
+    "topic.creation.default.partitions": "4",
+    "topic.creation.default.cleanup.policy": "delete",
+    "topic.creation.default.retention.ms": "259200000",
+    
+    "_comment_schema": "===== Schema 变更 =====",
+    "include.schema.changes": "true",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+    "schema.history.internal.kafka.topic": "schema-changes.ecom",
+    
+    "_comment_transform": "===== SMT (单消息转换) =====",
+    "transforms": "unwrap,addApp",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "transforms.addApp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addApp.static.field": "source_app",
+    "transforms.addApp.static.value": "ecommerce",
+    
+    "_comment_advanced": "===== 高级配置 =====",
+    "max.queue.size": "8192",
+    "max.batch.size": "2048",
+    "poll.interval.ms": "500",
+    "snapshot.fetch.size": "2000",
+    "snapshot.locking.mode": "minimal",
+    "database.connection.timezone": "Asia/Shanghai",
+    
+    "_comment_error": "===== 错误处理 =====",
+    "errors.tolerance": "all",
+    "errors.deadletterqueue.topic.name": "dlq.ecom",
+    "errors.deadletterqueue.topic.replication.factor": "1"
+  }
+}

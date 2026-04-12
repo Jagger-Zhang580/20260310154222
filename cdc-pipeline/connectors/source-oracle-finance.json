@@ -1,0 +1,31 @@
+{
+  "name": "oracle-finance-source",
+  "config": {
+    "connector.class": "io.debezium.connector.oracle.OracleConnector",
+    "database.hostname": "oracle-finance",
+    "database.port": "1521",
+    "database.user": "cdc_user",
+    "database.password": "cdc_pass123",
+    "database.dbname": "XEPDB1",
+    "database.server.name": "finance_oracle",
+    "database.pdb.name": "XEPDB1",
+    
+    "_comment_logmining": "===== LogMiner (Oracle CDC 引擎) =====",
+    "log.mining.strategy": "online_catalog",
+    "_comment_strategies": "online_catalog=推荐(低延迟) | hybrid=混合模式",
+    
+    "snapshot.mode": "initial",
+    "topic.prefix": "finance",
+    "topic.creation.default.replication.factor": "1",
+    "topic.creation.default.partitions": "4",
+    
+    "transforms": "unwrap,addApp",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.addApp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addApp.static.field": "source_app",
+    "transforms.addApp.static.value": "finance",
+    
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+    "schema.history.internal.kafka.topic": "schema-changes.finance"
+  }
+}

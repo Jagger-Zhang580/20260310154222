@@ -1,0 +1,45 @@
+{
+  "name": "postgres-erp-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres-erp",
+    "database.port": "5432",
+    "database.user": "cdc_user",
+    "database.password": "cdc_pass123",
+    "database.dbname": "erp_system",
+    "database.server.name": "erp_pg",
+    "slot.name": "debezium_erp",
+    
+    "_comment_publication": "===== Publication 配置 =====",
+    "publication.name": "cdc_publication",
+    "publication.autocreate.mode": "filtered",
+    
+    "_comment_tables": "===== 表过滤 =====",
+    "schema.include.list": "public",
+    "table.include.list": "public.suppliers,public.purchase_orders,public.inventory,public.vouchers",
+    
+    "_comment_snapshot": "===== 全量+增量 =====",
+    "snapshot.mode": "initial",
+    
+    "_comment_wal": "===== WAL (逻辑解码) =====",
+    "plugin.name": "pgoutput",
+    "_comment_plugins": "pgoutput=内置 | decoderbufs=需安装插件 | wal2json=JSON格式",
+    
+    "_comment_topic": "===== Topic =====",
+    "topic.prefix": "erp",
+    "topic.creation.default.replication.factor": "1",
+    "topic.creation.default.partitions": "4",
+    
+    "_comment_transform": "===== SMT =====",
+    "transforms": "unwrap,addApp",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "transforms.addApp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addApp.static.field": "source_app",
+    "transforms.addApp.static.value": "erp",
+    
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+    "schema.history.internal.kafka.topic": "schema-changes.erp"
+  }
+}

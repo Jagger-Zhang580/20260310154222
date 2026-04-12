@@ -1,0 +1,26 @@
+{
+  "name": "mongo-logs-source",
+  "config": {
+    "connector.class": "io.debezium.connector.mongodb.MongoDbConnector",
+    "mongodb.hosts": "rs0/mongo-logs:27017",
+    "mongodb.user": "cdc_user",
+    "mongodb.password": "cdc_pass123",
+    "mongodb.authsource": "admin",
+    "database.server.name": "logs_mongo",
+    
+    "_comment_collections": "===== 集合过滤 =====",
+    "database.include.list": "app_logs",
+    "collection.include.list": "app_logs.access_logs,app_logs.error_logs,app_logs.audit_logs",
+    
+    "_comment_snapshot": "===== 全量+增量 =====",
+    "snapshot.mode": "initial",
+    
+    "_comment_oplog": "===== Oplog / Change Stream =====",
+    "capture.mode": "change_streams_update_full",
+    "_comment_modes": "change_streams=推荐 | change_streams_update_full=包含完整文档",
+    
+    "topic.prefix": "logs",
+    "topic.creation.default.replication.factor": "1",
+    "topic.creation.default.partitions": "4"
+  }
+}

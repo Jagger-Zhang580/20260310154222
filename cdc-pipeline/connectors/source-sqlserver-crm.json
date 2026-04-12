@@ -1,0 +1,28 @@
+{
+  "name": "sqlserver-crm-source",
+  "config": {
+    "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+    "database.hostname": "sqlserver-crm",
+    "database.port": "1433",
+    "database.user": "sa",
+    "database.password": "CDC_pass123!",
+    "database.names": "crm_system",
+    "database.server.name": "crm_mssql",
+    
+    "_comment_cdc": "===== SQL Server CDC 需要手动开启 =====",
+    "_comment_prereq": "EXEC sys.sp_cdc_enable_db; EXEC sys.sp_cdc_enable_table @source_schema='dbo', @source_name='customers';",
+    "database.history.kafka.bootstrap.servers": "kafka:29092",
+    "database.history.kafka.topic": "schema-changes.crm",
+    
+    "snapshot.mode": "initial",
+    "topic.prefix": "crm",
+    "topic.creation.default.replication.factor": "1",
+    "topic.creation.default.partitions": "4",
+    
+    "transforms": "unwrap,addApp",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.addApp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addApp.static.field": "source_app",
+    "transforms.addApp.static.value": "crm"
+  }
+}

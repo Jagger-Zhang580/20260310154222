@@ -1,0 +1,339 @@
+version: '3.8'
+
+# ============================================================
+#  CDC 数据集成 Pipeline 系统
+#  全量 + 增量(CDC) + 多源多宿 + 多应用配置
+# ============================================================
+
+x-common-env: &common-env
+  TZ: Asia/Shanghai
+
+services:
+  # ==========================================================
+  #  消息中间件层 - Kafka (CDC 事件总线)
+  # ==========================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    container_name: cdc-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: cdc-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 72
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # Kafka UI 管理
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: cdc-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "9000:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: cdc-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
+
+  # ==========================================================
+  #  Debezium Connect - CDC 引擎
+  # ==========================================================
+  debezium-connect:
+    image: debezium/connect:2.7
+    container_name: cdc-debezium
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: cdc-cluster
+      CONFIG_STORAGE_TOPIC: cdc_connect_configs
+      OFFSET_STORAGE_TOPIC: cdc_connect_offsets
+      STATUS_STORAGE_TOPIC: cdc_connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: /kafka/connect
+      # Sink 连接器插件
+      CONNECT_REST_ADVERTISED_HOST_NAME: debezium-connect
+    volumes:
+      - debezium_data:/kafka/data
+      - ./connectors:/kafka/connect/custom-plugins
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8083/"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ==========================================================
+  #  源数据库 (Source)
+  # ==========================================================
+
+  # MySQL - 电商系统
+  mysql-ecom:
+    image: mysql:8.0
+    container_name: cdc-mysql-ecom
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql_pass123
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: cdc_user
+      MYSQL_PASSWORD: cdc_pass123
+    command: >
+      --server-id=1
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --binlog-row-image=FULL
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_ecom_data:/var/lib/mysql
+      - ./init-scripts/mysql-ecom.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysql_pass123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - ERP 系统
+  postgres-erp:
+    image: postgres:16
+    container_name: cdc-postgres-erp
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: erp_system
+      POSTGRES_USER: cdc_user
+      POSTGRES_PASSWORD: cdc_pass123
+    command: >
+      postgres
+      -c wal_level=logical
+      -c max_wal_senders=4
+      -c max_replication_slots=4
+      -c wal_keep_size=256MB
+    volumes:
+      - postgres_erp_data:/var/lib/postgresql/data
+      - ./init-scripts/postgres-erp.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cdc_user -d erp_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # SQL Server - CRM 系统
+  sqlserver-crm:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cdc-sqlserver-crm
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "CDC_pass123!"
+      MSSQL_AGENT_ENABLED: "true"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - sqlserver_crm_data:/var/opt/mssql/data
+      - ./init-scripts/sqlserver-crm.sh:/docker-entrypoint-initdb.d/init.sh
+    restart: unless-stopped
+
+  # MongoDB - 日志系统
+  mongo-logs:
+    image: mongo:7
+    container_name: cdc-mongo-logs
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: cdc_user
+      MONGO_INITDB_ROOT_PASSWORD: cdc_pass123
+    command: --replSet rs0 --oplogSize 128
+    volumes:
+      - mongo_logs_data:/data/db
+    restart: unless-stopped
+
+  # Oracle (轻量版) - 财务系统
+  oracle-finance:
+    image: gvenzl/oracle-xe:21
+    container_name: cdc-oracle-finance
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PASSWORD: cdc_pass123
+      APP_USER: cdc_user
+      APP_USER_PASSWORD: cdc_pass123
+    volumes:
+      - oracle_finance_data:/opt/oracle/oradata
+    restart: unless-stopped
+
+  # ==========================================================
+  #  目标数据库 (Sink)
+  # ==========================================================
+
+  # ClickHouse - OLAP 分析
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: cdc-clickhouse
+    ports:
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # Native (冲突! 改用 9001)
+    ports:
+      - "8123:8123"
+      - "19000:9000"
+    environment:
+      CLICKHOUSE_DB: analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ch_pass123
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./init-scripts/clickhouse.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # Elasticsearch - 全文搜索
+  elasticsearch:
+    image: elasticsearch:8.15.0
+    container_name: cdc-elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+
+  # Redis - 实时缓存
+  redis-cache:
+    image: redis:7-alpine
+    container_name: cdc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Apache Doris - 实时数仓
+  doris-fe:
+    image: apache/doris:2.1-fe
+    container_name: cdc-doris-fe
+    ports:
+      - "8030:8030"
+      - "9030:9030"
+    environment:
+      FE_SERVERS: fe1:127.0.0.1:9010
+      FE_ID: 1
+    volumes:
+      - doris_fe_data:/opt/apache-doris/fe/doris-meta
+    restart: unless-stopped
+
+  doris-be:
+    image: apache/doris:2.1-be
+    container_name: cdc-doris-be
+    depends_on:
+      - doris-fe
+    ports:
+      - "8040:8040"
+    environment:
+      FE_SERVERS: fe1:doris-fe:9010
+      BE_ADDR: doris-be:9050
+    volumes:
+      - doris_be_data:/opt/apache-doris/be/storage
+    restart: unless-stopped
+
+  # MinIO - S3 兼容数据湖
+  minio:
+    image: minio/minio:latest
+    container_name: cdc-minio
+    ports:
+      - "9090:9000"
+      - "9091:9001"
+    environment:
+      MINIO_ROOT_USER: cdc_admin
+      MINIO_ROOT_PASSWORD: cdc_minio123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  # ==========================================================
+  #  管理工具
+  # ==========================================================
+
+  # Debezium UI
+  debezium-ui:
+    image: debezium/debezium-ui:2.7
+    container_name: cdc-debezium-ui
+    depends_on:
+      debezium-connect:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CONNECT_URIS: http://debezium-connect:8083
+
+  # RedisInsight
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: cdc-redis-insight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    restart: unless-stopped
+
+volumes:
+  zookeeper_data:
+  zookeeper_logs:
+  kafka_data:
+  debezium_data:
+  mysql_ecom_data:
+  postgres_erp_data:
+  sqlserver_crm_data:
+  mongo_logs_data:
+  oracle_finance_data:
+  clickhouse_data:
+  es_data:
+  redis_data:
+  doris_fe_data:
+  doris_be_data:
+  minio_data:
+  redisinsight_data:
