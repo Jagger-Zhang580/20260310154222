@@ -1,0 +1,31 @@
+{
+  "name": "sink-doris-realtime",
+  "config": {
+    "connector.class": "org.apache.doris.flink.connector.sink.DorisSinkConnector",
+    
+    "_comment_doris": "===== Doris 连接 =====",
+    "doris.fe.nodes": "doris-fe:8030",
+    "doris.jdbc.url": "jdbc:mysql://doris-fe:9030",
+    "doris.username": "root",
+    "doris.password": "",
+    "doris.database": "realtime_dw",
+    
+    "_comment_topics": "===== Topic 映射 =====",
+    "topics": "ecom.ecommerce.orders,erp.public.inventory",
+    
+    "_comment_write": "===== Stream Load 写入 =====",
+    "doris.sink.properties.format": "json",
+    "doris.sink.properties.read_json_by_line": "true",
+    "doris.sink.batch.size": "10000",
+    "doris.sink.batch.interval": "10s",
+    
+    "_comment_table": "===== 表路由 =====",
+    "doris.table.route": "ecom.ecommerceorders=ods_orders,erp.public.inventory=ods_inventory",
+    
+    "tasks.max": "2",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}

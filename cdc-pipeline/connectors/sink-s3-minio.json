@@ -1,0 +1,45 @@
+{
+  "name": "sink-s3-minio-datalake",
+  "config": {
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    
+    "_comment_s3": "===== S3/MinIO 连接 =====",
+    "s3.bucket.name": "cdc-datalake",
+    "s3.region": "us-east-1",
+    "s3.endpoint.url": "http://minio:9000",
+    "s3.access.key.id": "cdc_admin",
+    "s3.secret.access.key": "cdc_minio123",
+    "s3.path.style.access": "true",
+    
+    "_comment_topics": "===== 全量归档到数据湖 =====",
+    "topics": "ecom.ecommerce.orders,ecom.ecommerce.order_items,erp.public.vouchers,erp.public.inventory,logs.app_logs.audit_logs",
+    
+    "_comment_format": "===== 存储格式 =====",
+    "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+    "_comment_formats": "JsonFormat | AvroFormat | ParquetFormat | ByteArrayFormat",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    
+    "_comment_partition": "===== 分区策略 =====",
+    "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",
+    "partition.duration.ms": "3600000",
+    "path.format": "YYYY/MM/dd/HH",
+    "locale": "zh_CN",
+    "timezone": "Asia/Shanghai",
+    
+    "_comment_flush": "===== 刷写策略 =====",
+    "flush.size": "10000",
+    "rotate.schedule.interval.ms": "300000",
+    "rotate.interval.ms": "3600000",
+    
+    "_comment_compaction": "===== 文件压缩 =====",
+    "compaction.enabled": "true",
+    "compaction.compact.interval.ms": "600000",
+    
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "schema.compatibility": "NONE",
+    "tasks.max": "2",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false"
+  }
+}

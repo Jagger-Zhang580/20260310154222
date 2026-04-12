@@ -1,0 +1,42 @@
+{
+  "name": "sink-elasticsearch",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    
+    "_comment_es": "===== Elasticsearch 连接 =====",
+    "connection.url": "http://elasticsearch:9200",
+    "connection.username": "",
+    "connection.password": "",
+    
+    "_comment_topics": "===== Topic → Index 映射 =====",
+    "topics": "ecom.ecommerce.products,logs.app_logs.access_logs,logs.app_logs.error_logs",
+    "type.name": "_doc",
+    
+    "_comment_mapping": "===== 索引命名 =====",
+    "transforms": "routeTS",
+    "transforms.routeTS.type": "org.apache.kafka.connect.transforms.TimestampRouter",
+    "transforms.routeTS.topic.format": "${topic}-${timestamp}",
+    "transforms.routeTS.timestamp.format": "yyyyMM",
+    
+    "_comment_write": "===== 写入模式 =====",
+    "write.method": "upsert",
+    "behavior.on.null.values": "delete",
+    "behavior.on.malformed.documents": "warn",
+    "flush.timeout.ms": "30000",
+    "max.buffered.records": "20000",
+    "batch.size": "2000",
+    "max.in.flight.requests": "5",
+    "lingering.ms": "1000",
+    
+    "_comment_schema": "===== Schema =====",
+    "key.ignore": "true",
+    "schema.ignore": "true",
+    "compact.map.entries": "true",
+    
+    "tasks.max": "2",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}

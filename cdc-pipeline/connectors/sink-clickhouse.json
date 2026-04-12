@@ -1,0 +1,40 @@
+{
+  "name": "sink-clickhouse-orders",
+  "config": {
+    "connector.class": "com.clickhouse.kafka.connect.sink.ClickHouseSinkConnector",
+    
+    "_comment_clickhouse": "===== ClickHouse 连接 =====",
+    "clickhouse.url": "jdbc:clickhouse://clickhouse:9000/analytics",
+    "clickhouse.username": "default",
+    "clickhouse.password": "ch_pass123",
+    
+    "_comment_topics": "===== 订阅的 Kafka Topic =====",
+    "topics": "ecom.ecommerce.orders,ecom.ecommerce.order_items,erp.public.purchase_orders",
+    
+    "_comment_mapping": "===== 表映射规则 =====",
+    "clickhouse.table.mapping": "ecom.ecommerce.orders=order_analytics,erp.public.purchase_orders=purchase_analytics",
+    
+    "_comment_insert": "===== 写入模式 =====",
+    "insert.mode": "upsert",
+    "clickhouse.insert.quorum": "1",
+    "clickhouse.retry.on.failure": "true",
+    "clickhouse.max.retry": "3",
+    "clickhouse.retry.backoff": "1000",
+    
+    "_comment_buffer": "===== 缓冲配置 =====",
+    "buffer.count.records": "10000",
+    "buffer.flush.time.ms": "5000",
+    "buffer.size.bytes": "5242880",
+    
+    "_comment_error": "===== 错误处理 =====",
+    "errors.tolerance": "all",
+    "errors.deadletterqueue.topic.name": "dlq.clickhouse",
+    "errors.deadletterqueue.topic.replication.factor": "1",
+    
+    "tasks.max": "2",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}

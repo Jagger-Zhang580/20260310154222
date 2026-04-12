@@ -1,0 +1,33 @@
+{
+  "name": "sink-redis-cache",
+  "config": {
+    "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
+    
+    "_comment_redis": "===== Redis 连接 =====",
+    "redis.hosts": "redis-cache:6379",
+    "redis.password": "",
+    "redis.database": "0",
+    
+    "_comment_topics": "===== 订阅 Topic =====",
+    "topics": "ecom.ecommerce.users,ecom.ecommerce.products",
+    
+    "_comment_write": "===== 写入模式 =====",
+    "redis.client.mode": "Standalone",
+    "redis.key.format": "cdc:%s:%s",
+    "_comment_key_format": "cdc:{topic}:{key} 例: cdc:ecom.ecommerce.users:1",
+    
+    "_comment_ttl": "===== TTL 缓存过期 =====",
+    "redis.ttl.ms": "86400000",
+    
+    "_comment_transform": "===== 转换: 只缓存需要的字段 =====",
+    "transforms": "flatten",
+    "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+    "transforms.flatten.delimiter": ".",
+    
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}
